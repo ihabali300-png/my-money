@@ -209,6 +209,17 @@ details.sub>div{padding:0 14px 14px;animation:rise .35s both}
 .emo{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:6px}
 .emo button{font-size:22px;padding:5px 0;border-radius:10px}
 .emo button.on{background:var(--a20);outline:1px solid var(--acc)}
+.libg{margin-top:14px}
+.libh{display:flex;align-items:center;font-weight:800;font-size:14px;margin-bottom:8px}
+.libh .more{margin-right:auto;font-size:12px;color:var(--acc);font-weight:700;padding:4px 10px;border-radius:99px;background:var(--a12)}
+.libgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.lib{position:relative;background:var(--g04);border:1px solid var(--line);border-radius:15px;padding:9px 4px 7px;text-align:center}
+.lib .le{display:block;font-size:24px;line-height:30px}
+.lib b{display:block;font-size:11.5px;line-height:1.3;min-height:30px;display:flex;align-items:center;justify-content:center}
+.lib small{color:var(--mut);font-size:11px}
+.lib .ck{position:absolute;top:5px;left:6px;width:18px;height:18px;border-radius:50%;font-size:11px;line-height:18px;background:var(--g07);color:var(--mut)}
+.lib.on{border-color:var(--acc);background:var(--a12)}
+.lib.on .ck{background:var(--acc);color:var(--onacc);animation:pop .3s}
 /* settings */
 .themes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .th{border-radius:16px;padding:10px 4px 8px;text-align:center;font-size:12px;font-weight:700;border:2px solid transparent}
@@ -390,13 +401,22 @@ details.sub>div{padding:0 14px 14px;animation:rise .35s both}
   <div class="handle"><div class="shead">⭐ أصنافي السريعة<button class="x" data-closesheet>✕</button></div></div>
   <div class="help">الصنف بيحفظ الاسم والسعر والقسم. دوسة واحدة عليه في الرئيسية بتسجّله، وتقدر تعدّل السعر قبل الحفظ.</div>
   <div id="itemsList" style="margin-top:8px"></div>
-  <button class="save" id="newItemBtn">＋ صنف جديد</button>
+  <button class="save" id="libBtn">📚 اختار من الأصناف الجاهزة</button>
+  <button class="ghost" id="newItemBtn">＋ صنف جديد بإيدك</button>
+</div>
+
+<!-- LIBRARY SHEET -->
+<div class="sheet" id="libSheet">
+  <div class="handle"><div class="shead">📚 أصناف جاهزة<button class="x" data-closesheet>✕</button></div></div>
+  <div class="help">دوس على الصنف يتضاف لأصنافك السريعة ✓ — ودوسة تانية تشيله. الأسعار تقريبية، عدّلها بضغطة طويلة على الصنف في الرئيسية.</div>
+  <div id="libList"></div>
+  <button class="save" data-closesheet>👌 تمام</button>
 </div>
 
 <div class="wheel" id="wheel"><div class="wh-head"><button id="whOk">✓ تم</button><span id="whTitle"></span></div><div class="wh-box"><div class="wh-list" id="whList"></div></div></div>
 <div id="toast"></div>
 <script>
-const APP_V = 5;
+const APP_V = 6;
 const CATS = {
   out:[['food','🍔','أكل وشرب'],['grocery','🛒','بقالة'],['transport','🚕','مواصلات'],['rent','🏠','سكن'],['bills','📱','فواتير ونت'],['clothes','👕','لبس'],['fun','🎮','ترفيه'],['health','💊','علاج'],['family','🇪🇬','تحويل لمصر'],['building','🏗️','العمارة'],['wedding','💍','الخطوبة'],['gifts','🎁','هدايا'],['savings','🏦','ادخار'],['other','📦','حاجات تانية']],
   in:[['salary','💼','مرتب'],['commission','🏆','عمولة وتارجت'],['side','💡','شغل جانبي'],['otherin','💵','دخل تاني']]
@@ -436,7 +456,7 @@ function ae(e){ const cp=[...e].map(c=>c.codePointAt(0).toString(16)).filter(h=>
 function animNum(el, val, f){ const from=el._v||0; el._v=val; const t0=performance.now(), dur=750;
   const step=t=>{ const k=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-k,3); el.textContent=f(from+(val-from)*e); if(k<1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
 const tTitle = t => t.item || (CAT[t.cat]?.n||t.cat);
-const tIcon = t => { const it=t.item && S.items.find(i=>i.name===t.item); return it?.e || CAT[t.cat]?.e || '❔'; };
+const tIcon = t => { const it=t.item && S.items.find(i=>i.name===t.item); return it?.e || (t.item && LIBF.find(x=>x.name===t.item)?.e) || CAT[t.cat]?.e || '❔'; };
 /* item name travels inside the sheet's note column as "[name] note" — no sheet changes needed */
 const encNote = t => t.item ? '['+t.item+']'+(t.note?' '+t.note:'') : (t.note||'');
 function decTx(t){ const m=/^\[(.+?)\]\s?([\s\S]*)$/.exec(t.note||''); if(m){ t.item=m[1]; t.note=m[2]; } else t.item=t.item||''; return t; }
@@ -484,7 +504,7 @@ function renderHero(){
 /* ---------- home: quick items + recent ---------- */
 function renderQuick(){
   $('#qrow').innerHTML = S.items.map(it=>`<button class="qi" data-qi="${it.id}"><span class="ic">${it.e||CAT[it.cat]?.e||'⭐'}</span><div class="nm">${esc(it.name)}</div><div class="pr num">${fmt(it.price)} ${curLbl(it.cur)}</div></button>`).join('')
-    + `<button class="qi add" id="qiAdd"><span class="ic">＋</span><div class="nm">صنف جديد</div><div class="pr">&nbsp;</div></button>`;
+    + `<button class="qi add" id="qiLib"><span class="ic">📚</span><div class="nm">أصناف جاهزة</div><div class="pr">${LIBF.length}+</div></button><button class="qi add" id="qiAdd"><span class="ic">＋</span><div class="nm">صنف جديد</div><div class="pr">&nbsp;</div></button>`;
 }
 function txRow(t, ops, showDay){
   const c=CAT[t.cat]||{n:t.cat}; const sub=[t.item?c.n:'', t.note, showDay?dayName(t.date):''].filter(Boolean).map(esc).join(' · ');
@@ -543,7 +563,8 @@ function renderSugg(){
   const q=$('#itemName').value.trim().toLowerCase();
   const names=new Map(); S.items.filter(i=>(i.type||'out')===F.type).forEach(i=>names.set(i.name,{name:i.name,price:i.price,cur:i.cur,cat:i.cat,e:i.e}));
   sortTx([...S.tx]).filter(t=>t.item&&t.type===F.type).forEach(t=>{ if(!names.has(t.item)) names.set(t.item,{name:t.item,price:+t.amount,cur:t.cur,cat:t.cat}); });
-  const l=[...names.values()].filter(x=>!q||x.name.toLowerCase().includes(q)).filter(x=>x.name.toLowerCase()!==q).slice(0,10);
+  if(q) LIBF.filter(x=>x.type===F.type).forEach(x=>{ if(!names.has(x.name)) names.set(x.name,x); });
+  const l=[...names.values()].filter(x=>!q||x.name.toLowerCase().includes(q)).filter(x=>x.name.toLowerCase()!==q).slice(0,12);
   $('#sugg').innerHTML=l.map((x,k)=>`<button class="chip" data-sg="${k}">${x.e||CAT[x.cat]?.e||'🏷️'} ${esc(x.name)} · <span class="num">${fmt(x.price)}</span></button>`).join(''); $('#sugg')._l=l;
 }
 function key(k){ buzz(6); let a=F.amt;
@@ -575,6 +596,30 @@ function renderItemsList(){
   $('#itemsList').innerHTML = S.items.length ? S.items.map(it=>`<div class="itm"><div class="e">${it.e||CAT[it.cat]?.e}</div><div class="d"><b>${esc(it.name)}</b><small>${CAT[it.cat]?.n||''} · ${it.type==='in'?'دخل':'مصروف'}</small></div><span class="p num">${fmt(it.price)} ${curLbl(it.cur)}</span><button data-iedit="${it.id}">✏️</button><button data-idel="${it.id}">🗑️</button></div>`).join('')
     : `<div class="empty"><span class="big">${ae('⭐')}</span>لسه مفيش أصناف — ضيف القهوة والغدا اللي بتاخدهم كل يوم</div>`;
 }
+
+
+/* ---------- ready-made items library (approximate Tabuk prices — editable) ---------- */
+const LIB=[
+ ['🍽️ مطاعم وأكل',[['شاورما','🌯',10,'food'],['برجر','🍔',25,'food'],['وجبة برجر كاملة','🍟',35,'food'],['بروست','🍗',25,'food'],['كبسة / رز بخاري','🍛',30,'food'],['مندي','🍖',35,'food'],['بيتزا','🍕',40,'food'],['فول وتميس','🫘',10,'food'],['فلافل','🧆',6,'food'],['فطار مطعم','🍳',15,'food'],['وجبة غدا','🍽️',30,'food'],['وجبة عشا','🍽️',30,'food'],['طلب توصيل','🛵',45,'food'],['حلويات','🍩',15,'food']]],
+ ['☕ مشروبات',[['قهوة','☕',12,'food'],['قهوة مختصة','☕',18,'food'],['آيس لاتيه','🧋',18,'food'],['شاي كرك','🍵',4,'food'],['عصير','🧃',8,'food'],['مشروب طاقة','⚡',9,'food'],['بيبسي','🥤',3,'food'],['مية','💧',2,'food']]],
+ ['🛒 بقالة وبيت',[['مقاضي الأسبوع','🛒',100,'grocery'],['خبز','🍞',2,'grocery'],['حليب','🥛',7,'grocery'],['بيض','🥚',15,'grocery'],['جبنة','🧀',12,'grocery'],['زبادي','🥣',5,'grocery'],['تونة','🐟',7,'grocery'],['فاكهة','🍎',15,'grocery'],['سناكس وشيبس','🍿',6,'grocery'],['كرتونة مية','📦',12,'grocery'],['منظفات','🧴',25,'grocery'],['مناديل','🧻',15,'grocery']]],
+ ['🚕 مواصلات',[['أوبر / كريم','🚕',20,'transport'],['بنزين','⛽',50,'transport'],['غسيل عربية','🚿',25,'transport']]],
+ ['📱 فواتير واشتراكات',[['نت البيت','🌐',230,'bills'],['باقة الجوال','📱',100,'bills'],['شحن رصيد','📲',30,'bills'],['كهربا','💡',100,'bills'],['يوتيوب بريميوم','▶️',27,'bills'],['جيميناي برو','✨',80,'bills'],['Claude برو','🤖',86,'bills'],['نتفليكس','🎬',45,'bills']]],
+ ['🏠 سكن',[['الإيجار','🏠',1000,'rent'],['صيانة البيت','🔧',50,'rent']]],
+ ['👕 لبس وعناية',[['حلاقة','💈',30,'clothes'],['مغسلة هدوم','🧺',20,'clothes'],['عطر','🧴',100,'clothes'],['تيشيرت','👕',50,'clothes'],['جزمة','👟',150,'clothes']]],
+ ['🎮 ترفيه وخروج',[['شحن ألعاب','🎮',40,'fun'],['قعدة مع الشباب','☕',25,'fun'],['سينما','🎬',50,'fun'],['خروجة','🎉',60,'fun']]],
+ ['💊 صحة',[['صيدلية','💊',30,'health'],['دكتور','🩺',150,'health']]],
+ ['🎯 أهداف ومصر',[['ادخار الشهر','🏦',3000,'savings'],['تحويل لمصر','🇪🇬',500,'family'],['العمارة','🏗️',1000,'building'],['الخطوبة','💍',500,'wedding'],['هدية','🎁',100,'gifts']]],
+ ['💵 دخل',[['المرتب','💼',6000,'salary','in'],['عمولة','🏆',500,'commission','in'],['شغل جانبي','💡',200,'side','in']]]
+];
+const LIBF=LIB.flatMap(([g,l])=>l.map(([name,e,price,cat,type])=>({name,e,price,cat,type:type||'out',cur:'SAR',g})));
+function renderLib(){
+  const has=new Set(S.items.map(i=>i.name));
+  $('#libList').innerHTML=LIB.map(([g,l],gi)=>`<div class="libg"><div class="libh">${g}<button class="more" data-addg="${gi}">＋ الكل</button></div><div class="libgrid">${l.map(([n,e,p])=>`<button class="lib ${has.has(n)?'on':''}" data-lib="${esc(n)}"><span class="le">${e}</span><b>${esc(n)}</b><small class="num">${fmt(p)}</small><span class="ck">${has.has(n)?'✓':'＋'}</span></button>`).join('')}</div></div>`).join('');
+}
+function toggleLib(name, forceAdd){ const ex=S.items.find(i=>i.name===name);
+  if(ex && !forceAdd){ S.items=S.items.filter(i=>i!==ex); return false; }
+  if(!ex){ const x=LIBF.find(i=>i.name===name); S.items.push({id:uid(),name:x.name,price:x.price,cur:'SAR',cat:x.cat,type:x.type,e:x.e}); } return true; }
 
 /* ---------- effects ---------- */
 function burst(e,n=10){ const r=$('#fab').getBoundingClientRect(); for(let k=0;k<n;k++){ const s=document.createElement('div'); s.className='burst'; s.textContent=e;
@@ -725,10 +770,15 @@ $('#fab').onclick=()=>openAdd('out');
 $('#setBtn').onclick=()=>go('sSet');
 $('#manageItems').onclick=()=>{ renderItemsList(); openSheet('itemsSheet'); };
 $('#newItemBtn').onclick=()=>openItemForm(null);
+$('#libBtn').onclick=()=>{ renderLib(); openSheet('libSheet'); };
+$('#libList').onclick=e=>{ const g=e.target.closest('[data-addg]'), b=e.target.closest('[data-lib]');
+  if(g){ LIB[+g.dataset.addg][1].forEach(([n])=>toggleLib(n,true)); buzz(15); toast('✓ اتضاف القسم كله'); }
+  else if(b){ const on=toggleLib(b.dataset.lib); buzz(); if(on) toast('⭐ اتضاف «'+b.dataset.lib+'»'); } else return;
+  saveItems(); renderLib(); renderQuick(); renderItemsList(); };
 let lp=null;
 $('#qrow').addEventListener('pointerdown',e=>{ const q=e.target.closest('[data-qi]'); if(!q) return; lp=setTimeout(()=>{ lp='fired'; buzz(20); openItemForm(S.items.find(i=>i.id===q.dataset.qi)); },550); });
 ['pointerup','pointerleave','pointercancel'].forEach(ev=>$('#qrow').addEventListener(ev,()=>{ if(lp&&lp!=='fired') clearTimeout(lp); }));
-$('#qrow').onclick=e=>{ if(lp==='fired'){ lp=null; return; } if(e.target.closest('#qiAdd')) return openItemForm(null); const q=e.target.closest('[data-qi]'); if(q) openAdd(null,null,S.items.find(i=>i.id===q.dataset.qi)); };
+$('#qrow').onclick=e=>{ if(lp==='fired'){ lp=null; return; } if(e.target.closest('#qiAdd')) return openItemForm(null); if(e.target.closest('#qiLib')){ renderLib(); return openSheet('libSheet'); } const q=e.target.closest('[data-qi]'); if(q) openAdd(null,null,S.items.find(i=>i.id===q.dataset.qi)); };
 $('#itemsList').onclick=e=>{ const ed=e.target.closest('[data-iedit]'), del=e.target.closest('[data-idel]');
   if(ed) openItemForm(S.items.find(i=>i.id===ed.dataset.iedit));
   if(del){ if(!del.classList.contains('sure')){ del.classList.add('sure'); del.textContent='متأكد؟'; setTimeout(()=>{ if(del.isConnected){del.classList.remove('sure');del.textContent='🗑️'} },3000); return; }
