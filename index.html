@@ -435,7 +435,7 @@ details.sub>div{padding:0 14px 14px;animation:rise .35s both}
   <button class="nb on" data-go="sHome"><i>🏠</i>الرئيسية</button>
   <button class="nb" data-go="sAna"><i>📊</i>تحليل</button>
   <button class="fab" id="fab">＋</button>
-  <button class="nb" data-go="sEg"><i>🇪🇬</i>البيت في مصر</button>
+  <button class="nb" data-go="sEg"><i>🇪🇬</i>مصر</button>
   <button class="nb" data-go="sBud"><i>🎯</i>الميزانية</button>
 </div></nav>
 
@@ -498,7 +498,7 @@ details.sub>div{padding:0 14px 14px;animation:rise .35s both}
 <div class="wheel" id="wheel"><div class="wh-head"><button id="whOk">✓ تم</button><span id="whTitle"></span></div><div class="wh-box"><div class="wh-list" id="whList"></div></div></div>
 <div id="toast"></div>
 <script>
-const APP_V = 8;
+const APP_V = 9;
 const CATS = {
   out:[['food','🍔','أكل وشرب'],['grocery','🛒','بقالة'],['transport','🚕','مواصلات'],['rent','🏠','سكن'],['bills','📱','فواتير ونت'],['clothes','👕','لبس'],['fun','🎮','ترفيه'],['health','💊','علاج'],['family','🇪🇬','البيت في مصر'],['building','🏗️','العمارة'],['wedding','💍','الخطوبة'],['gifts','🎁','هدايا'],['savings','🏦','ادخار'],['other','📦','حاجات تانية']],
   in:[['salary','💼','مرتب'],['commission','🏆','عمولة وتارجت'],['side','💡','شغل جانبي'],['otherin','💵','دخل تاني']]
@@ -658,7 +658,7 @@ function openAdd(type, tx, item){ $$('#addSheet .fold').forEach(f=>f.classList.r
   renderForm(); openSheet('addSheet');
 }
 function openItemForm(it, fromLib){ $$('#addSheet .fold').forEach(f=>f.classList.remove('open','need')); setTimeout(()=>fold('foldMore',true),50);
-  F = it ? { mode:'item', type:it.type||'out', amt:String(it.price), cur:it.cur||'SAR', cat:it.cat, e:it.e, itemEdit:fromLib?null:it.id } : { mode:'item', type:'out', amt:'0', cur:'SAR', cat:null, e:null, itemEdit:null };
+  F = it ? { mode:'item', type:it.type||'out', amt:String(it.price||0), cur:it.cur||'SAR', cat:it.cat, sub:it.sub, e:it.e||null, itemEdit:fromLib?null:it.id } : { mode:'item', type:'out', amt:'0', cur:'SAR', cat:null, e:null, itemEdit:null };
   $('#itemName').value = it ? it.name : ''; $('#placeName').value = it ? (it.place||'') : ''; renderForm(); openSheet('addSheet');
 }
 function renderSugg(){
@@ -730,9 +730,15 @@ const LIB=[
  ['📄 إقامة ورسوم',[['تجديد إقامة','🪪',600,'other'],['رسوم حكومية','🏛️',100,'other'],['تذكرة طيران','✈️',900,'other'],['شنطة سفر','🧳',150,'other'],['شحن لمصر','📦',100,'family']]],
  ['🎁 مناسبات',[['هدية','🎁',100,'gifts'],['عيدية','💵',200,'gifts'],['صدقة','🤲',20,'other'],['زكاة','🕋',100,'other'],['عزومة','🍽️',150,'food']]],
  ['🎯 أهداف وادخار',[['ادخار الشهر','🏦',3000,'savings'],['العمارة','🏗️',1000,'building'],['الخطوبة','💍',500,'wedding'],['شبكة / دهب','💎',2000,'wedding'],['طوارئ','🛟',300,'savings']]],
- ['🇪🇬 البيت في مصر',[['مصروف الزوجة','👩',2000,'family','out','wife'],['مصاريف البيت','🏠',1500,'family','out','house'],['مصروف الأهل','👨‍👩‍👦',1000,'family','out','parents'],['كهربا ومية مصر','🧾',300,'family','out','egbills'],['نت مصر','🌐',250,'family','out','egbills']]],
  ['💵 دخل',[['المرتب','💼',6000,'salary','in'],['عمولة','🏆',500,'commission','in'],['شغل جانبي','💡',200,'side','in'],['مكافأة','🎉',500,'otherin','in'],['بيع حاجة','🏷️',100,'otherin','in']]]
 ];
+const EG_LIB={
+ wife:[['مصروف الزوجة الشهري','👛',2000],['لبس الزوجة','👗',800],['جزمة / شنطة','👠',600],['كوافير','💇‍♀️',300],['مكياج وعناية','💄',400],['عطور','🌸',400],['دكتورة','🩺',400],['علاج الزوجة','💊',200],['رصيد وباقة','📱',150],['مواصلات الزوجة','🚕',200],['خروجة مع الزوجة','🎡',300],['هدية للزوجة','🎁',500],['دهب','💍',5000],['جيم / كورس','📚',400],['مصروف الحمل والولادة','🤰',2000],['عيد ميلاد','🎂',500]],
+ house:[['بقالة الشهر','🛒',3000],['خضار وفاكهة','🥕',800],['لحمة البيت','🥩',1200],['فراخ','🍗',600],['سمك','🐟',400],['عيش','🍞',150],['لبن وجبنة','🧀',400],['رز ومكرونة وزيت','🍚',500],['أنبوبة غاز','🔥',200],['منظفات البيت','🧴',300],['أدوات منزلية','🍳',400],['صيانة / سباك / كهربائي','🔧',300],['أجهزة كهربائية','📺',3000],['عفش','🛋️',5000],['مفروشات','🛏️',800],['ستائر وسجاد','🪟',700],['أكل من برة','🍕',300],['مياه معدنية','💧',150],['زرع وتنظيف','🧹',150]],
+ parents:[['مصروف أبويا','👴',1000],['مصروف أمي','👵',1000],['علاج ودوا','💊',500],['دكتور / تحاليل','🩺',400],['هدية للأهل','🎁',500],['عيدية الأهل','💵',500],['لحمة العيد','🐑',2000],['مساعدة إخواتي','🤝',500],['رحلة عمرة / حج (ادخار)','🕋',2000],['تصليح في بيت العيلة','🔧',500]],
+ egbills:[['كهربا مصر','💡',400],['مية مصر','🚰',100],['غاز طبيعي','🔥',80],['نت أرضي','🌐',300],['كارت شحن','📲',100],['اشتراك دش / تلفزيون','📺',100],['تليفون أرضي','☎️',50],['زبالة ونظافة','🗑️',30]]
+};
+LIB.splice(LIB.length-1,0,['🇪🇬 البيت في مصر',Object.entries(EG_LIB).flatMap(([sub,l])=>l.map(([n,e,p])=>[n,e,p,'family','out',sub]))]);
 const LIBF=LIB.flatMap(([g,l])=>l.map(([name,e,price,cat,type,sub])=>({name,e,price,cat,type:type||'out',cur:cat==='family'?'EGP':'SAR',sub:sub||'',g})));
 function renderLib(){
   const has=new Set(S.items.map(i=>i.name)); const q=($('#libQ').value||'').trim().toLowerCase();
@@ -892,6 +898,9 @@ let egSel='all', egEdit=false;
 function egTotal(){ return S.egypt.subs.reduce((x,s)=>x+(+s.budget||0),0); }
 function syncFamilyBudget(){ const t=egTotal(); if(t>0 && S.rate>0){ const v=Math.round(t/S.rate); if(+S.budget.family!==v){ S.budget.family=v; persist(); clearTimeout(window._bq); window._bq=setTimeout(()=>enqueue({action:'setBudget',budget:S.budget}),1500); } } }
 function saveEgypt(){ persist(); syncFamilyBudget(); clearTimeout(window._eq); window._eq=setTimeout(()=>enqueue({action:'setSetting',key:'egypt',value:JSON.stringify(S.egypt)}),900); }
+function subItems(id){ const mine=S.items.filter(i=>i.cat==='family'&&i.sub===id).map(i=>({...i,mine:true}));
+  const lib=(EG_LIB[id]||[]).filter(([n])=>!mine.some(m=>m.name===n)).map(([name,e,price])=>({name,e,price,cur:'EGP',cat:'family',sub:id,type:'out'}));
+  const l=[...mine,...lib]; window._subItems=l; return l; }
 function renderEgypt(){
   const {y,m}=view, list=monthTx(y,m).filter(t=>t.cat==='family'&&t.type==='out');
   const spent=list.reduce((x,t)=>x+toEGP(t.amount,t.cur),0), tot=egTotal(), p=tot?spent/tot:0;
@@ -916,7 +925,9 @@ function renderEgypt(){
         <button class="save" id="subSave">💾 احفظ</button><button class="ghost" id="subDel" style="color:#fca5a5">🗑️ امسح البند</button>`:''}
       <div class="bgrid" style="margin-top:10px"><button class="bcell" id="subBud"><i>🎯</i><div class="n">الميزانية الشهرية</div><div class="v num">${fmt(b)}</div></button><div class="bcell"><i>💸</i><div class="n">اتصرف</div><div class="v num" style="color:var(--out)">${fmt(sp)}</div></div><div class="bcell"><i>🧮</i><div class="n">الباقي</div><div class="v num">${b?fmt(b-sp):'—'}</div></div></div>
       <div class="bar" style="margin-top:10px"><div style="width:${Math.min(100,pp*100)}%;background:${pp>=1?'#ef4444':'var(--grad)'}"></div></div>
-      <button class="save" id="subAddTx">＋ سجّل مصروف لـ${esc(x.name)}</button>
+      <div class="lbl2" style="display:flex;align-items:center">⚡ أصناف ${esc(x.name)} <span class="help">&nbsp;(دوسة = تسجيل)</span><button class="more" id="subNewItem" style="margin-right:auto;font-size:12px;color:var(--acc);font-weight:700;padding:4px 10px;border-radius:99px;background:var(--a12)">＋ صنف</button></div>
+      <div class="libgrid">${subItems(x.id).map((it,k)=>`<div class="lib ${it.mine?'on':''}" data-si="${k}" role="button"><span class="le">${it.e}</span><b>${esc(it.name)}</b><small class="num">${fmt(it.price)} ${curLbl(it.cur)}</small>${it.mine?`<button class="ed" data-sied="${k}">✏️</button>`:''}</div>`).join('')}</div>
+      <button class="save" id="subAddTx">＋ مصروف تاني لـ${esc(x.name)}</button>
       <div style="margin-top:8px">${txs.length?txs.map(t=>txRow(t,true,true)).join(''):`<div class="empty"><span class="big">${x.e}</span>لسه مفيش مصاريف للبند ده الشهر ده</div>`}</div></div>`;
   }
   $('#subPanel').innerHTML=html;
@@ -1086,6 +1097,9 @@ $('#subPanel').onclick=e=>{ const st=e.target.closest('[data-st]'); if(st){ egSe
   if(t.closest('#subDel')){ const b=t.closest('#subDel'); if(!b._sure){ b._sure=1; b.textContent='⚠️ متأكد؟ دوس تاني'; return; } S.egypt.subs=S.egypt.subs.filter(s=>s.id!==x.id); egSel='all'; egEdit=false; saveEgypt(); return renderEgypt(); }
   if(t.closest('#subBud')) return openWheel(x.e+' '+x.name+' (جنيه)',EG_VALS,+x.budget||0,v=>{ if(+x.budget===v) return; x.budget=v; saveEgypt(); renderEgypt(); });
   if(t.closest('#subAddTx')) return openAdd({sub:x.id});
+  if(t.closest('#subNewItem')) return openItemForm({name:'',e:'',price:0,cur:'EGP',cat:'family',sub:x.id,type:'out'},true);
+  const sied=t.closest('[data-sied]'); if(sied){ const it=window._subItems[+sied.dataset.sied]; return openItemForm(S.items.find(i=>i.id===it.id)); }
+  const si=t.closest('[data-si]'); if(si){ const it=window._subItems[+si.dataset.si]; return openAdd(null,null,{...it}); }
   const ed=t.closest('[data-ed]'), del=t.closest('[data-del]');
   if(ed) return openAdd(null,S.tx.find(q=>q.id===ed.dataset.ed));
   if(del){ if(!del.classList.contains('sure')){ del.classList.add('sure'); del.textContent='متأكد؟'; return; } S.tx=S.tx.filter(q=>q.id!==del.dataset.del); enqueue({action:'delete',id:del.dataset.del}); renderAll(); toast('🗑️ اتمسح'); } };
