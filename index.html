@@ -258,6 +258,11 @@ details.sub>div{padding:0 14px 14px;animation:rise .35s both}
 #addSheet .keypad{grid-template-columns:repeat(4,1fr);gap:5px}
 #addSheet .keypad button{padding:5px 0;font-size:17px;border-radius:11px}
 #addSheet .keypad button[data-k="⌫"]{color:var(--out)}
+#addSheet .keypad{transition:width .3s,margin .3s}
+#addSheet .keypad.oh-right{width:72%;margin-left:auto}
+#addSheet .keypad.oh-left{width:72%;margin-right:auto}
+#addSheet .keypad.oh-right button,#addSheet .keypad.oh-left button{padding:9px 0;font-size:19px}
+.handB{width:32px;height:32px;border-radius:10px;background:var(--g07);font-size:16px;flex:none}
 #addSheet .cats{grid-template-columns:repeat(5,1fr);gap:6px}
 #addSheet .cat{padding:6px 1px;font-size:10.5px}
 #addSheet .cat .ci{font-size:21px;height:26px;line-height:26px}
@@ -490,7 +495,7 @@ details.sub>div{padding:0 14px 14px;animation:rise .35s both}
     <button class="ibtn" id="micBtn" title="بالصوت">🎙️</button><button class="ibtn" id="camBtn" title="صوّر الإيصال">📷</button></div>
   <div class="ocrbar" id="ocrBar"></div>
   <div class="sugg" id="sugg"></div>
-  <div class="amount"><button class="cur" id="curBtn">ر.س</button><div class="val num" id="amtVal">0</div></div>
+  <div class="amount"><button class="cur" id="curBtn">ر.س</button><div class="val num" id="amtVal">0</div><button class="handB" id="handBtn" title="إيد واحدة">🤚</button></div>
   <div class="keypad" id="keypad"></div>
   <div class="fold" id="foldCat">
     <button class="fhead"><span>📂 القسم</span><span class="fval" id="catVal">اختار القسم</span><span class="arr">▾</span></button>
@@ -574,7 +579,7 @@ details.sub>div{padding:0 14px 14px;animation:rise .35s both}
 <div class="wheel" id="wheel"><div class="wh-head"><button id="whOk">✓ تم</button><span id="whTitle"></span></div><div class="wh-box"><div class="wh-list" id="whList"></div></div></div>
 <div id="toast"></div>
 <script>
-const APP_V = 11;
+const APP_V = 12;
 const CATS = {
   out:[['food','🍔','أكل وشرب'],['grocery','🛒','بقالة'],['transport','🚕','مواصلات'],['rent','🏠','سكن'],['bills','📱','فواتير ونت'],['clothes','👕','لبس'],['fun','🎮','ترفيه'],['health','💊','علاج'],['family','🇪🇬','البيت في مصر'],['building','🏗️','العمارة'],['wedding','💍','الخطوبة'],['gifts','🎁','هدايا'],['savings','🏦','ادخار'],['other','📦','حاجات تانية']],
   in:[['salary','💼','مرتب'],['commission','🏆','عمولة وتارجت'],['side','💡','شغل جانبي'],['otherin','💵','دخل تاني']]
@@ -701,6 +706,7 @@ $$('.sheet .handle').forEach(h=>{ let y0=null; const sh=h.parentElement;
 
 /* ---------- add / edit (transactions + items share one sheet) ---------- */
 let F = {};
+function applyHand(){ const h=LS.get('hand','right'); const k=$('#keypad'); k.classList.remove('oh-right','oh-left'); if(h!=='both') k.classList.add('oh-'+h); $('#handBtn').textContent=h==='right'?'🫱':h==='left'?'🫲':'🙌'; }
 function buildKeypad(){ $('#keypad').innerHTML = ['1','2','3','⌫','4','5','6','.','7','8','9','0'].map(k=>`<button data-k="${k}">${k}</button>`).join(''); }
 function renderCats(){ $('#cats').innerHTML = CATS[F.type].map(([id,e,n])=>`<button class="cat ${F.cat===id?'on':''}" data-cat="${id}"><span class="ci">${F.cat===id?ae(e):e}</span>${n}</button>`).join('');
   const fam=F.cat==='family'; $('#subWrap').style.display=fam?'block':'none'; $('#placeSugg').style.display=fam?'none':'';
@@ -1124,6 +1130,7 @@ $('#itemsList').onclick=e=>{ const ed=e.target.closest('[data-iedit]'), del=e.ta
     S.items=S.items.filter(i=>i.id!==del.dataset.idel); saveItems(); renderItemsList(); renderQuick(); toast('🗑️ اتمسح الصنف'); } };
 $('#delItemBtn').onclick=function(){ if(!this._sure){ this._sure=1; this.textContent='⚠️ متأكد؟ دوس تاني'; return; } S.items=S.items.filter(i=>i.id!==F.itemEdit); saveItems(); closeSheet(); renderAll(); renderItemsList(); toast('🗑️ اتمسح الصنف'); };
 $('#typeSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b)return; if(F.type!==b.dataset.t){ F.type=b.dataset.t; F.cat=null; } buzz(6); renderForm(); };
+$('#handBtn').onclick=()=>{ const o=['right','left','both'], h=LS.get('hand','right'), n=o[(o.indexOf(h)+1)%3]; LS.set('hand',n); applyHand(); buzz(); toast(n==='right'?'🫱 الأرقام على اليمين (إيد يمين)':n==='left'?'🫲 الأرقام على الشمال (إيد شمال)':'🙌 الأرقام بعرض الشاشة'); };
 $('#keypad').onclick=e=>{ const b=e.target.closest('button'); if(b) key(b.dataset.k); };
 $('#curBtn').onclick=()=>{ buzz(); F.cur=F.cur==='SAR'?'EGP':'SAR'; $('#curBtn').textContent=curLbl(F.cur); };
 $('#cats').onclick=e=>{ const b=e.target.closest('.cat'); if(!b)return; buzz(); F.cat=b.dataset.cat; renderCats(); foldVals(); if(F.cat!=='family') setTimeout(()=>fold('foldCat',false),280); };
@@ -1437,7 +1444,7 @@ $('#rate').addEventListener('change',()=>{ S.rateAuto=false; saveSmart(); render
 
 /* ---------- init ---------- */
 S.tx.forEach(decTx);
-applyTheme(S.theme); buildKeypad(); buildPlans();
+applyTheme(S.theme); buildKeypad(); applyHand(); buildPlans();
 $('#logoE').innerHTML=ae('💰');
 $('#api').value=S.api; $('#token').value=S.token; $('#rate').value=S.rate||''; $('#startV').textContent=S.start;
 $$('#dispSeg button').forEach(x=>x.className=x.dataset.c===S.disp?'on n':'');
