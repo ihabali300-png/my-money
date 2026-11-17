@@ -252,10 +252,12 @@ details.sub>div{padding:0 14px 14px;animation:rise .35s both}
 .fold.need{border-color:var(--out);animation:shake .4s}
 @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .sfoot{position:sticky;bottom:calc(-18px - env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--card) 30%);padding:4px 0 6px;z-index:2}
-#addSheet .amount{margin:10px 0 7px;padding:6px 14px}
-#addSheet .amount .val{font-size:34px}
-#addSheet .keypad{gap:6px}
-#addSheet .keypad button{padding:8px 0;font-size:20px;border-radius:13px}
+#addSheet .amount{margin:8px 0 6px;padding:3px 10px 3px 12px;border-radius:14px}
+#addSheet .amount .val{font-size:26px}
+#addSheet .cur{padding:4px 10px;font-size:12px;border-radius:9px}
+#addSheet .keypad{grid-template-columns:repeat(4,1fr);gap:5px}
+#addSheet .keypad button{padding:5px 0;font-size:17px;border-radius:11px}
+#addSheet .keypad button[data-k="⌫"]{color:var(--out)}
 #addSheet .cats{grid-template-columns:repeat(5,1fr);gap:6px}
 #addSheet .cat{padding:6px 1px;font-size:10.5px}
 #addSheet .cat .ci{font-size:21px;height:26px;line-height:26px}
@@ -572,7 +574,7 @@ details.sub>div{padding:0 14px 14px;animation:rise .35s both}
 <div class="wheel" id="wheel"><div class="wh-head"><button id="whOk">✓ تم</button><span id="whTitle"></span></div><div class="wh-box"><div class="wh-list" id="whList"></div></div></div>
 <div id="toast"></div>
 <script>
-const APP_V = 10;
+const APP_V = 11;
 const CATS = {
   out:[['food','🍔','أكل وشرب'],['grocery','🛒','بقالة'],['transport','🚕','مواصلات'],['rent','🏠','سكن'],['bills','📱','فواتير ونت'],['clothes','👕','لبس'],['fun','🎮','ترفيه'],['health','💊','علاج'],['family','🇪🇬','البيت في مصر'],['building','🏗️','العمارة'],['wedding','💍','الخطوبة'],['gifts','🎁','هدايا'],['savings','🏦','ادخار'],['other','📦','حاجات تانية']],
   in:[['salary','💼','مرتب'],['commission','🏆','عمولة وتارجت'],['side','💡','شغل جانبي'],['otherin','💵','دخل تاني']]
@@ -699,7 +701,7 @@ $$('.sheet .handle').forEach(h=>{ let y0=null; const sh=h.parentElement;
 
 /* ---------- add / edit (transactions + items share one sheet) ---------- */
 let F = {};
-function buildKeypad(){ $('#keypad').innerHTML = ['1','2','3','4','5','6','7','8','9','.','0','⌫'].map(k=>`<button data-k="${k}">${k}</button>`).join(''); }
+function buildKeypad(){ $('#keypad').innerHTML = ['1','2','3','⌫','4','5','6','.','7','8','9','0'].map(k=>`<button data-k="${k}">${k}</button>`).join(''); }
 function renderCats(){ $('#cats').innerHTML = CATS[F.type].map(([id,e,n])=>`<button class="cat ${F.cat===id?'on':''}" data-cat="${id}"><span class="ci">${F.cat===id?ae(e):e}</span>${n}</button>`).join('');
   const fam=F.cat==='family'; $('#subWrap').style.display=fam?'block':'none'; $('#placeSugg').style.display=fam?'none':'';
   if(fam){ if(!F.sub || !subOf(F.sub)) F.sub=S.egypt.subs[0]?.id||''; $('#subChips').innerHTML=S.egypt.subs.map(x=>`<button class="chip ${F.sub===x.id?'on':''}" data-sub="${x.id}">${x.e} ${esc(x.name)}</button>`).join(''); } }
