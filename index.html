@@ -239,6 +239,27 @@ details.sub>div{padding:0 14px 14px;animation:rise .35s both}
 .lib .ed{position:absolute;top:4px;right:5px;width:22px;height:22px;border-radius:7px;font-size:11px;background:var(--g07)}
 .lib .pl{display:block;font-size:10px;color:var(--acc)}
 .qi .pl{font-size:10px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
+.fold{margin-top:10px;border:1px solid var(--line);border-radius:16px;background:var(--g04);overflow:hidden;transition:border-color .2s}
+.fold.open{border-color:var(--a55)}
+.fhead{width:100%;display:flex;align-items:center;gap:8px;padding:11px 13px;font-weight:700;font-size:14px;text-align:right}
+.fhead .fval{margin-right:auto;font-size:13px;color:var(--acc);font-weight:700;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fhead .arr{color:var(--mut);transition:transform .3s}
+.fold.open .arr{transform:rotate(180deg)}
+.fbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s cubic-bezier(.2,.8,.2,1)}
+.fbody>div{overflow:hidden;padding:0 11px}
+.fold.open .fbody{grid-template-rows:1fr}
+.fold.open .fbody>div{padding-bottom:11px}
+.fold.need{border-color:var(--out);animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.sfoot{position:sticky;bottom:calc(-18px - env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--card) 30%);padding:4px 0 6px;z-index:2}
+#addSheet .amount{margin:10px 0 7px;padding:6px 14px}
+#addSheet .amount .val{font-size:34px}
+#addSheet .keypad{gap:6px}
+#addSheet .keypad button{padding:8px 0;font-size:20px;border-radius:13px}
+#addSheet .cats{grid-template-columns:repeat(5,1fr);gap:6px}
+#addSheet .cat{padding:6px 1px;font-size:10.5px}
+#addSheet .cat .ci{font-size:21px;height:26px;line-height:26px}
+#addSheet .cat .ci img{width:26px;height:26px}
 /* settings */
 .themes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .th{border-radius:16px;padding:10px 4px 8px;text-align:center;font-size:12px;font-weight:700;border:2px solid transparent}
@@ -424,30 +445,36 @@ details.sub>div{padding:0 14px 14px;animation:rise .35s both}
 <div class="sheet" id="addSheet">
   <div class="handle"><div class="shead"><span id="addTitle">➖ مصروف جديد</span><button class="x" data-closesheet>✕</button></div></div>
   <div class="seg" id="typeSeg"><button data-t="out" class="on out">➖ مصروف</button><button data-t="in">➕ دخل</button></div>
-  <div class="lbl2">🏷️ اسم الصنف</div>
-  <input class="inp" id="itemName" placeholder="مثلاً: برجر، قهوة، بنزين…" autocomplete="off">
+  <input class="inp" id="itemName" placeholder="🏷️ اسم الصنف… برجر، قهوة، بنزين" autocomplete="off" style="margin-top:10px">
   <div class="sugg" id="sugg"></div>
-  <div class="lbl2">🏪 المحل <span class="help">(اختياري — عشان تفرّق برجر هرفي عن برجر البيك)</span></div>
-  <input class="inp" id="placeName" placeholder="مثلاً: البيك، هرفي، بنده…" autocomplete="off">
-  <div class="sugg" id="placeSugg"></div>
   <div class="amount"><button class="cur" id="curBtn">ر.س</button><div class="val num" id="amtVal">0</div></div>
   <div class="keypad" id="keypad"></div>
-  <div class="lbl2">📂 القسم</div>
-  <div class="cats" id="cats"></div>
-  <div id="subWrap" style="display:none"><div class="lbl2">🇪🇬 البند</div><div class="chips" id="subChips"></div></div>
-  <div id="txOnly">
-    <div class="lbl2">📝 ملاحظة</div>
-    <input class="inp" id="note" placeholder="اختياري… مثلاً: مع الشباب">
-    <div class="lbl2">📅 التاريخ</div>
-    <div class="row"><div class="chips" id="dayChips"><button class="chip on" data-d="0">النهارده</button><button class="chip" data-d="1">امبارح</button></div><input type="date" class="inp" id="date" style="flex:1"></div>
-    <button class="toggle" id="starT"><span>⭐ احفظه في أصنافي السريعة</span><span class="sw"></span></button>
+  <div class="fold" id="foldCat">
+    <button class="fhead"><span>📂 القسم</span><span class="fval" id="catVal">اختار القسم</span><span class="arr">▾</span></button>
+    <div class="fbody"><div><div class="cats" id="cats"></div>
+      <div id="subWrap" style="display:none"><div class="lbl2">🇪🇬 البند</div><div class="chips" id="subChips"></div></div></div></div>
   </div>
-  <div id="itemOnly" style="display:none">
-    <div class="lbl2">😀 الأيقونة</div>
-    <div class="emo" id="emo"></div>
+  <div class="fold" id="foldMore">
+    <button class="fhead"><span>➕ تفاصيل</span><span class="fval" id="moreVal">النهارده</span><span class="arr">▾</span></button>
+    <div class="fbody"><div>
+      <div class="lbl2">🏪 المحل <span class="help">(عشان تفرّق برجر هرفي عن برجر البيك)</span></div>
+      <input class="inp" id="placeName" placeholder="مثلاً: البيك، هرفي، بنده…" autocomplete="off">
+      <div class="sugg" id="placeSugg"></div>
+      <div id="txOnly">
+        <div class="lbl2">📅 التاريخ</div>
+        <div class="row"><div class="chips" id="dayChips"><button class="chip on" data-d="0">النهارده</button><button class="chip" data-d="1">امبارح</button></div><input type="date" class="inp" id="date" style="flex:1"></div>
+        <div class="lbl2">📝 ملاحظة</div>
+        <input class="inp" id="note" placeholder="اختياري… مثلاً: مع الشباب">
+        <button class="toggle" id="starT"><span>⭐ احفظه في أصنافي السريعة</span><span class="sw"></span></button>
+      </div>
+      <div id="itemOnly" style="display:none">
+        <div class="lbl2">😀 الأيقونة</div>
+        <div class="emo" id="emo"></div>
+      </div>
+    </div></div>
   </div>
-  <button class="save" id="saveBtn">✅ سجّل</button>
-  <button class="ghost" id="delItemBtn" style="display:none;color:#fca5a5">🗑️ امسح الصنف</button>
+  <div class="sfoot"><button class="save" id="saveBtn">✅ سجّل</button>
+  <button class="ghost" id="delItemBtn" style="display:none;color:#fca5a5">🗑️ امسح الصنف</button></div>
 </div>
 
 <!-- ITEMS MANAGER SHEET -->
@@ -471,7 +498,7 @@ details.sub>div{padding:0 14px 14px;animation:rise .35s both}
 <div class="wheel" id="wheel"><div class="wh-head"><button id="whOk">✓ تم</button><span id="whTitle"></span></div><div class="wh-box"><div class="wh-list" id="whList"></div></div></div>
 <div id="toast"></div>
 <script>
-const APP_V = 7;
+const APP_V = 8;
 const CATS = {
   out:[['food','🍔','أكل وشرب'],['grocery','🛒','بقالة'],['transport','🚕','مواصلات'],['rent','🏠','سكن'],['bills','📱','فواتير ونت'],['clothes','👕','لبس'],['fun','🎮','ترفيه'],['health','💊','علاج'],['family','🇪🇬','البيت في مصر'],['building','🏗️','العمارة'],['wedding','💍','الخطوبة'],['gifts','🎁','هدايا'],['savings','🏦','ادخار'],['other','📦','حاجات تانية']],
   in:[['salary','💼','مرتب'],['commission','🏆','عمولة وتارجت'],['side','💡','شغل جانبي'],['otherin','💵','دخل تاني']]
@@ -612,10 +639,15 @@ function renderForm(){
   $('#delItemBtn').style.display = isItem&&F.itemEdit?'block':'none'; $('#delItemBtn').textContent='🗑️ امسح الصنف'; $('#delItemBtn')._sure=0;
   $('#starT').classList.toggle('on',!!F.star);
   if(isItem) $('#emo').innerHTML=EMOJIS.map(e=>`<button class="${F.e===e?'on':''}" data-emo="${e}">${e}</button>`).join('');
-  renderCats(); renderSugg(); renderPlaceSugg(); syncDayChips();
+  renderCats(); renderSugg(); renderPlaceSugg(); syncDayChips(); foldVals();
 }
+function foldVals(){ const c=CAT[F.cat]; const sb=F.cat==='family'&&F.sub&&subOf(F.sub);
+  $('#catVal').textContent = c ? c.e+' '+c.n+(sb?' · '+sb.e+' '+sb.name:'') : 'اختار القسم';
+  const d=$('#date').value, pl=$('#placeName').value.trim(), nt=$('#note').value.trim();
+  $('#moreVal').textContent = F.mode==='item' ? [pl?'🏪 '+pl:'', F.e||''].filter(Boolean).join(' · ')||'المحل والأيقونة' : [pl?'🏪 '+pl:'', d?dayName(d):'', nt?'📝':'', F.star?'⭐':''].filter(Boolean).join(' · '); }
+function fold(id,open){ const f=$('#'+id); f.classList.toggle('open',open==null?!f.classList.contains('open'):open); f.classList.remove('need'); }
 function syncDayChips(){ const d=$('#date').value, t=today(), y=ymd(new Date(Date.now()-864e5)); $$('#dayChips .chip').forEach(c=>c.classList.toggle('on', (c.dataset.d==='0'&&d===t)||(c.dataset.d==='1'&&d===y))); }
-function openAdd(type, tx, item){
+function openAdd(type, tx, item){ $$('#addSheet .fold').forEach(f=>f.classList.remove('open','need'));
   if(tx) F = { mode:'tx', type:tx.type, amt:String(tx.amount), cur:tx.cur, cat:tx.cat, sub:tx.sub, editId:tx.id, star:false };
   else if(item) F = { mode:'tx', type:item.type||'out', amt:String(item.price), cur:item.cur||'SAR', cat:item.cat, sub:item.sub, editId:null, star:false, fromItem:item.id };
   else F = { mode:'tx', type, amt:'0', cur:'SAR', cat:null, editId:null, star:false };
@@ -625,7 +657,7 @@ function openAdd(type, tx, item){
   $('#note').value = tx ? (tx.note||'') : ''; $('#date').value = tx ? tx.date : today();
   renderForm(); openSheet('addSheet');
 }
-function openItemForm(it, fromLib){
+function openItemForm(it, fromLib){ $$('#addSheet .fold').forEach(f=>f.classList.remove('open','need')); setTimeout(()=>fold('foldMore',true),50);
   F = it ? { mode:'item', type:it.type||'out', amt:String(it.price), cur:it.cur||'SAR', cat:it.cat, e:it.e, itemEdit:fromLib?null:it.id } : { mode:'item', type:'out', amt:'0', cur:'SAR', cat:null, e:null, itemEdit:null };
   $('#itemName').value = it ? it.name : ''; $('#placeName').value = it ? (it.place||'') : ''; renderForm(); openSheet('addSheet');
 }
@@ -654,14 +686,14 @@ function key(k){ buzz(6); let a=F.amt;
 function saveForm(){
   const amount=parseFloat(F.amt), name=$('#itemName').value.trim();
   if(F.mode==='item'){
-    if(!name) return toast('✋ اكتب اسم الصنف'); if(!(amount>0)) return toast('✋ اكتب السعر'); if(!F.cat) return toast('✋ اختار القسم');
+    if(!name) return toast('✋ اكتب اسم الصنف'); if(!(amount>0)) return toast('✋ اكتب السعر'); if(!F.cat){ fold('foldCat',true); $('#foldCat').classList.add('need'); return toast('✋ اختار القسم'); }
     const place=$('#placeName').value.trim();
     const it={ id:F.itemEdit||uid(), name, place, price:amount, cur:F.cur, cat:F.cat, type:F.type, e:F.e||CAT[F.cat].e, sub:F.cat==='family'?F.sub:'' };
     const i=S.items.findIndex(x=>x.id===it.id); if(i>=0) S.items[i]=it; else S.items.push(it);
     saveItems(); closeSheet(); renderAll(); renderItemsList(); burst(it.e); toast('⭐ اتحفظ «'+name+'»'); return;
   }
   if (!(amount>0)) return toast('✋ اكتب المبلغ الأول');
-  if (!F.cat) return toast('✋ اختار القسم');
+  if (!F.cat){ fold('foldCat',true); $('#foldCat').classList.add('need'); return toast('✋ اختار القسم'); }
   const place=$('#placeName').value.trim();
   const base = { type:F.type, amount, cur:F.cur, cat:F.cat, item:name, place, sub:F.cat==='family'?(F.sub||''):'', note:$('#note').value.trim(), date:$('#date').value||today() };
   if (F.editId){ const t=S.tx.find(x=>x.id===F.editId); Object.assign(t,base); enqueue({action:'update', tx:wire(t)}); toast('💾 اتعدّل'); }
@@ -998,13 +1030,15 @@ $('#delItemBtn').onclick=function(){ if(!this._sure){ this._sure=1; this.textCon
 $('#typeSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b)return; if(F.type!==b.dataset.t){ F.type=b.dataset.t; F.cat=null; } buzz(6); renderForm(); };
 $('#keypad').onclick=e=>{ const b=e.target.closest('button'); if(b) key(b.dataset.k); };
 $('#curBtn').onclick=()=>{ buzz(); F.cur=F.cur==='SAR'?'EGP':'SAR'; $('#curBtn').textContent=curLbl(F.cur); };
-$('#cats').onclick=e=>{ const b=e.target.closest('.cat'); if(!b)return; buzz(); F.cat=b.dataset.cat; renderCats(); };
-$('#emo').onclick=e=>{ const b=e.target.closest('[data-emo]'); if(!b)return; buzz(); F.e=b.dataset.emo; $$('#emo button').forEach(x=>x.classList.toggle('on',x===b)); };
+$('#cats').onclick=e=>{ const b=e.target.closest('.cat'); if(!b)return; buzz(); F.cat=b.dataset.cat; renderCats(); foldVals(); if(F.cat!=='family') setTimeout(()=>fold('foldCat',false),280); };
+$$('#addSheet .fhead').forEach(h=>h.onclick=()=>{ buzz(5); fold(h.parentElement.id); });
+['note','date'].forEach(id=>$('#'+id).addEventListener('input',foldVals));
+$('#emo').onclick=e=>{ const b=e.target.closest('[data-emo]'); if(!b)return; buzz(); F.e=b.dataset.emo; $$('#emo button').forEach(x=>x.classList.toggle('on',x===b)); foldVals(); };
 $('#itemName').oninput=renderSugg;
 $('#sugg').onclick=e=>{ const b=e.target.closest('[data-sg]'); if(!b)return; const x=$('#sugg')._l[+b.dataset.sg]; buzz();
   $('#itemName').value=x.name; F.amt=String(x.price); F.cur=x.cur||'SAR'; F.cat=x.cat; renderForm(); };
-$('#starT').onclick=()=>{ F.star=!F.star; buzz(); $('#starT').classList.toggle('on',F.star); };
-$('#dayChips').onclick=e=>{ const b=e.target.closest('.chip'); if(!b)return; $('#date').value=ymd(new Date(Date.now()-b.dataset.d*864e5)); syncDayChips(); };
+$('#starT').onclick=()=>{ F.star=!F.star; buzz(); $('#starT').classList.toggle('on',F.star); foldVals(); };
+$('#dayChips').onclick=e=>{ const b=e.target.closest('.chip'); if(!b)return; $('#date').value=ymd(new Date(Date.now()-b.dataset.d*864e5)); syncDayChips(); foldVals(); };
 $('#date').onchange=syncDayChips;
 $('#saveBtn').onclick=saveForm;
 $('#mPrev').onclick=()=>{ view.m--; if(view.m<0){view.m=11;view.y--} buzz(6); renderAll(); };
@@ -1036,11 +1070,11 @@ $('#logList').onclick=e=>{ const ed=e.target.closest('[data-ed]'), del=e.target.
 
 
 $('#placeChips').onclick=e=>{ const b=e.target.closest('[data-pf]'); if(!b)return; PF=b.dataset.pf; buzz(6); renderQuick(); };
-$('#placeName').oninput=()=>{ renderPlaceSugg(); renderSugg(); };
+$('#placeName').oninput=()=>{ renderPlaceSugg(); renderSugg(); foldVals(); };
 $('#itemName').addEventListener('input',renderPlaceSugg);
 $('#placeSugg').onclick=e=>{ const b=e.target.closest('[data-pl]'); if(!b)return; buzz(); $('#placeName').value=b.dataset.pl;
   const it=S.items.find(i=>i.name===$('#itemName').value.trim()&&i.place===b.dataset.pl); if(it){ F.amt=String(it.price); F.cur=it.cur; F.cat=it.cat; } renderForm(); };
-$('#subChips').onclick=e=>{ const b=e.target.closest('[data-sub]'); if(!b)return; buzz(); F.sub=b.dataset.sub; renderCats(); };
+$('#subChips').onclick=e=>{ const b=e.target.closest('[data-sub]'); if(!b)return; buzz(); F.sub=b.dataset.sub; renderCats(); foldVals(); setTimeout(()=>fold('foldCat',false),280); };
 $('#coachMore').onclick=()=>{ coachAll=!coachAll; renderCoach(); };
 $('#subTabs').onclick=e=>{ const b=e.target.closest('[data-st]'); if(!b)return; buzz(6); egSel=b.dataset.st; egEdit=false; renderEgypt(); };
 $('#subAdd').onclick=()=>{ const x={id:uid(),name:'بند جديد',e:'📦',budget:0}; S.egypt.subs.push(x); egSel=x.id; egEdit=true; saveEgypt(); renderEgypt(); setTimeout(()=>{ const i=$('#subName'); i&&i.focus(); i&&i.select(); },100); };
