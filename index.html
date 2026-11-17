@@ -159,6 +159,16 @@ details.sub>div{padding:0 12px 12px}
 .lbl2{font-size:12px;color:var(--mut);margin:10px 0 4px}
 .help{font-size:12px;color:var(--mut);line-height:1.8}
 
+.plan{border:1px solid var(--line);border-radius:16px;margin-bottom:10px;background:color-mix(in srgb,var(--sh) 19%,transparent)}
+.plan>summary{list-style:none;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.plan>summary .pi{font-size:26px}
+.plan>summary .pt{flex:1}
+.plan>summary .pt b{display:block;font-size:15px}
+.plan>summary .pt small{color:var(--mut);font-size:12px}
+.plan>summary .ps{text-align:left;font-weight:800;color:var(--acc);font-size:16px}
+.plan>div{padding:0 12px 12px}
+.plan.cur{border-color:var(--acc)}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:700}
 .themes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .th{border-radius:16px;padding:10px 4px 8px;text-align:center;font-size:12px;font-weight:700;border:2px solid transparent}
 .th .pv{height:46px;border-radius:12px;margin-bottom:6px;position:relative;overflow:hidden}
@@ -238,6 +248,9 @@ details.sub>div{padding:0 12px 12px}
 <section class="curtain" id="cBud">
   <div class="chead">🎯 الميزانية الشهرية<button class="x" data-close>✕</button></div>
   <div class="cbody">
+    <details class="sub" id="bPlans"><summary>📋 ميزانيات جاهزة</summary><div>
+      <div class="bgrid" style="margin-bottom:10px"><button class="bcell" id="salCell"><i>💼</i><div class="n">المرتب</div><div class="v num" id="salV">0</div></button></div>
+      <div id="plans"></div></div></details>
     <details class="sub"><summary>📈 ماشي إزاي الشهر ده؟</summary><div id="bProg"></div></details>
     <details class="sub" id="bLimits"><summary>✏️ حدود الأقسام <span class="help">(بالريال — دوس على الرقم)</span></summary><div><div class="bgrid" id="bGrid"></div><div class="insight" id="bTotal"></div></div></details>
   </div>
@@ -290,7 +303,7 @@ details.sub>div{padding:0 12px 12px}
 <div id="toast"></div>
 
 <script>
-const APP_V = 3;
+const APP_V = 4;
 const CATS = {
   out:[['food','🍔','أكل وشرب'],['grocery','🛒','بقالة'],['transport','🚕','مواصلات'],['rent','🏠','سكن'],['bills','📱','فواتير ونت'],['clothes','👕','لبس'],['fun','🎮','ترفيه'],['health','💊','علاج'],['family','🇪🇬','تحويل لمصر'],['building','🏗️','العمارة'],['wedding','💍','الخطوبة'],['gifts','🎁','هدايا'],['savings','🏦','ادخار'],['other','📦','حاجات تانية']],
   in:[['salary','💼','مرتب'],['commission','🏆','عمولة وتارجت'],['side','💡','شغل جانبي'],['otherin','💵','دخل تاني']]
@@ -304,7 +317,7 @@ const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAl
 const LS = { get:(k,d)=>{ try{ const v=localStorage.getItem('mm_'+k); return v==null?d:JSON.parse(v);}catch(e){return d} }, set:(k,v)=>{ try{localStorage.setItem('mm_'+k,JSON.stringify(v))}catch(e){} } };
 
 let S = { tx:LS.get('tx',[]), budget:LS.get('budget',{}), rate:LS.get('rate',0), disp:LS.get('disp','SAR'), start:LS.get('start',1),
-          theme:LS.get('theme','gold'), api:LS.get('api','https://script.google.com/macros/s/AKfycbw0htDZJS30Rb8d9S16gOSS7CdlnKFldBwlfZbsfiwL-ADByppjFW1fJPT6YC3c34FUpg/exec'), token:LS.get('token','ihab-money'), queue:LS.get('queue',[]) };
+          theme:LS.get('theme','gold'), salary:LS.get('salary',6000), api:LS.get('api','https://script.google.com/macros/s/AKfycbw0htDZJS30Rb8d9S16gOSS7CdlnKFldBwlfZbsfiwL-ADByppjFW1fJPT6YC3c34FUpg/exec'), token:LS.get('token','ihab-money'), queue:LS.get('queue',[]) };
 const persist = () => ['tx','budget','rate','disp','start','api','token','queue'].forEach(k=>LS.set(k,S[k]));
 
 /* ---------- helpers ---------- */
@@ -466,6 +479,33 @@ $('#whList').addEventListener('scroll',()=>{ const L=$('#whList'); clearTimeout(
 $('#whOk').onclick=()=>{ $('#wheel').classList.remove('open'); WH=null; };
 const BUD_VALS=(()=>{ const a=[]; for(let v=0;v<2000;v+=25)a.push(v); for(let v=2000;v<5000;v+=100)a.push(v); for(let v=5000;v<=30000;v+=500)a.push(v); return a; })();
 
+
+/* ---------- ready-made budgets ---------- */
+const PLAN_DEF=[['easy','🟢','مريحة','ادخار 2500',2500],['goal','🎯','الهدف','ادخار 3000',3000],['hard','🔥','الطموح','ادخار 4000',4000]];
+const VAR_W={food:.55,grocery:.08,transport:.10,clothes:.08,fun:.08,other:.11};
+const r25=v=>Math.max(0,Math.floor(v/25)*25);
+let PL={};
+function genPlan(save){ const sal=S.salary||0, rent=+S.budget.rent||1000, bills=+S.budget.bills||450;
+  const b={savings:save,rent,bills}; let left=sal-save-rent-bills; const k=Object.keys(VAR_W);
+  if(left<0) left=0; let used=0; k.forEach(c=>{ b[c]=r25(left*VAR_W[c]); used+=b[c]; }); b.other+=left-used; return b; }
+function buildPlans(){ PLAN_DEF.forEach(([id,,,,sv])=>PL[id]=genPlan(sv)); renderPlans(); }
+function renderPlans(){
+  $('#salV').textContent=fmt(S.salary||0);
+  const mDays=30, open=$$('#plans details[open]').map(d=>d.dataset.p);
+  $('#plans').innerHTML = !S.salary ? '<div class="empty">💼 حط مرتبك الأول (دوس على المربع)</div>' : PLAN_DEF.map(([id,e,n,sub])=>{ const b=PL[id];
+    const tot=Object.values(b).reduce((x,v)=>x+v,0), diff=S.salary-tot, perDay=(b.food||0)/mDays, rate=Math.round((b.savings||0)/S.salary*100);
+    const lvl=perDay>=35?['سهلة','#4ade80']:perDay>=22?['متوسطة','#fbbf24']:['صعبة 🍳','#fb7185'];
+    const cats=['savings','rent','bills','food','grocery','transport','clothes','fun','other'];
+    return `<details class="plan" data-p="${id}" ${open.includes(id)?'open':''}><summary><span class="pi">${e}</span><span class="pt"><b>${n} — ادخار <span class="num">${rate}%</span></b><small>🍔 أكل ${fmt(perDay)} ريال في اليوم · <span class="tag" style="background:${lvl[1]}22;color:${lvl[1]}">${lvl[0]}</span></small></span><span class="ps num">${fmt(b.savings)}</span></summary><div>
+      <div class="bgrid">${cats.map(c=>`<button class="bcell" data-pc="${id}:${c}"><i>${CAT[c].e}</i><div class="n">${CAT[c].n}</div><div class="v num">${fmt(b[c]||0)}</div></button>`).join('')}</div>
+      <div class="insight">${diff===0?'✅ المجموع = المرتب بالظبط':diff>0?`💡 فاضل <b>${fmt(diff)}</b> ريال مش متوزع`:`⚠️ زيادة <b>${fmt(-diff)}</b> ريال عن المرتب`}</div>
+      <button class="save" data-apply="${id}">✅ طبّق الميزانية دي</button></div></details>`; }).join('');
+}
+$('#salCell').onclick=()=>openWheel('💼 المرتب (ريال)',BUD_VALS,S.salary||0,v=>{ if(S.salary===v)return; S.salary=v; LS.set('salary',v); buildPlans(); });
+$('#plans').onclick=e=>{ const c=e.target.closest('[data-pc]'), a=e.target.closest('[data-apply]');
+  if(c){ const [id,cat]=c.dataset.pc.split(':'); openWheel(CAT[cat].e+' '+CAT[cat].n+' (ريال)',BUD_VALS,PL[id][cat]||0,v=>{ PL[id][cat]=v; renderPlans(); }); }
+  if(a){ const b=PL[a.dataset.apply]; S.budget={}; for(const k in b) if(b[k]>0) S.budget[k]=b[k]; persist(); enqueue({action:'setBudget',budget:S.budget}); renderAll(); buzz(); toast('🎯 اتطبّقت ميزانية «'+PLAN_DEF.find(x=>x[0]===a.dataset.apply)[2]+'»'); $('#bPlans').open=false; } };
+
 /* ---------- Google Sheet sync ---------- */
 function enqueue(op){ S.queue.push(op); persist(); flush(); }
 function setSync(state,txt){ const c={ok:'#4ade80',wait:'#fbbf24',err:'#ef4444',off:'#555'}[state]; $('#syncDot').style.background=c; $('#syncTxt').textContent=txt; }
@@ -507,7 +547,7 @@ $('#updNow').onclick=doUpdate; $('#updLater').onclick=()=>$('#updCard').style.di
 /* ---------- events ---------- */
 function renderAll(){ renderHero(); if($('#cAna').classList.contains('open')) renderAna(); renderBudget(); if($('#cLog').classList.contains('open')) renderLog(); }
 $('#addOut').onclick=()=>openAdd('out'); $('#addIn').onclick=()=>openAdd('in');
-$$('.tile').forEach(t=>t.onclick=()=>{ const c=$('#'+t.dataset.c); if(c.classList.contains('open')) closeCurtain(t.dataset.c); else { openCurtain(t.dataset.c); if(t.dataset.c==='cBud' && !Object.values(S.budget).some(v=>+v>0)) $('#bLimits').open=true; renderAll(); setTimeout(()=>window.scrollTo({top:c.offsetTop-70,behavior:'smooth'}),30); } });
+$$('.tile').forEach(t=>t.onclick=()=>{ const c=$('#'+t.dataset.c); if(c.classList.contains('open')) closeCurtain(t.dataset.c); else { openCurtain(t.dataset.c); if(t.dataset.c==='cBud' && !Object.values(S.budget).some(v=>+v>0)) $('#bPlans').open=true; renderAll(); setTimeout(()=>window.scrollTo({top:c.offsetTop-70,behavior:'smooth'}),30); } });
 document.addEventListener('click',e=>{ const x=e.target.closest('[data-close]'); if(x) closeCurtain(x.closest('.curtain').id); });
 $('#typeSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b)return; if(F.type!==b.dataset.t){ F.type=b.dataset.t; F.cat=null; } renderForm(); };
 $('#keypad').onclick=e=>{ const b=e.target.closest('button'); if(b) key(b.dataset.k); };
@@ -545,7 +585,7 @@ function applyTheme(t){ document.documentElement.dataset.theme=t; const th=THEME
   $('#themes').innerHTML=THEMES.map(([id,n,bg,ac])=>`<button class="th ${id===t?'on':''}" data-th="${id}"><div class="pv" style="background:${bg};border:1px solid ${ac}55"><i style="background:${ac}"></i><span style="background:${ac}"></span></div>${n}</button>`).join(''); }
 $('#themes').onclick=e=>{ const b=e.target.closest('.th'); if(!b)return; buzz(); S.theme=b.dataset.th; LS.set('theme',S.theme); applyTheme(S.theme); renderAll(); if(S.api) enqueue({action:'setSetting',key:'theme',value:S.theme}); };
 /* ---------- init ---------- */
-applyTheme(S.theme);
+applyTheme(S.theme); buildPlans();
 buildKeypad();
 $('#api').value=S.api; $('#token').value=S.token; $('#rate').value=S.rate||''; $('#startV').textContent=S.start;
 $$('#dispSeg button').forEach(x=>x.className=x.dataset.c===S.disp?'on n':'');
