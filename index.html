@@ -239,7 +239,7 @@ details.sub>div{padding:0 12px 12px}
   <div class="chead">🎯 الميزانية الشهرية<button class="x" data-close>✕</button></div>
   <div class="cbody">
     <details class="sub"><summary>📈 ماشي إزاي الشهر ده؟</summary><div id="bProg"></div></details>
-    <details class="sub"><summary>✏️ حدود الأقسام <span class="help">(بالريال — دوس على الرقم)</span></summary><div><div class="bgrid" id="bGrid"></div><div class="insight" id="bTotal"></div></div></details>
+    <details class="sub" id="bLimits"><summary>✏️ حدود الأقسام <span class="help">(بالريال — دوس على الرقم)</span></summary><div><div class="bgrid" id="bGrid"></div><div class="insight" id="bTotal"></div></div></details>
   </div>
 </section>
 
@@ -290,7 +290,7 @@ details.sub>div{padding:0 12px 12px}
 <div id="toast"></div>
 
 <script>
-const APP_V = 2;
+const APP_V = 3;
 const CATS = {
   out:[['food','🍔','أكل وشرب'],['grocery','🛒','بقالة'],['transport','🚕','مواصلات'],['rent','🏠','سكن'],['bills','📱','فواتير ونت'],['clothes','👕','لبس'],['fun','🎮','ترفيه'],['health','💊','علاج'],['family','🇪🇬','تحويل لمصر'],['building','🏗️','العمارة'],['wedding','💍','الخطوبة'],['gifts','🎁','هدايا'],['savings','🏦','ادخار'],['other','📦','حاجات تانية']],
   in:[['salary','💼','مرتب'],['commission','🏆','عمولة وتارجت'],['side','💡','شغل جانبي'],['otherin','💵','دخل تاني']]
@@ -425,7 +425,7 @@ function renderBudget(){
   const {byCat,o}=sums(monthTx(view.y,view.m));
   const rows = CATS.out.filter(([id])=>(+S.budget[id]||0)>0 || byCat[id]).map(([id,e,n])=>{ const lim=+S.budget[id]||0, sp=byCat[id]||0, p=lim?sp/lim:1; const col=!lim?'#64748b':p>=1?'#ef4444':p>=.8?'#fbbf24':cv('--acc');
     return `<div class="brow"><div class="t"><span>${e} ${n}</span><span class="num">${money(sp)} / ${lim?money(lim):'—'}</span></div><div class="bar"><div style="width:${Math.min(100,p*100)}%;background:${col}"></div></div>${lim&&p>=1?'<div class="m" style="color:#fca5a5;font-size:11px">🚨 عدّيت الحد بـ '+money(sp-lim)+'</div>':lim&&p>=.8?'<div class="m" style="color:#fde68a;font-size:11px">⚠️ قربت تخلص</div>':''}</div>`; });
-  $('#bProg').innerHTML = rows.length ? rows.join('') : '<div class="empty">🎯 حط حدود للأقسام من «حدود الأقسام» تحت</div>';
+  $('#bProg').innerHTML = rows.length ? rows.join('') : '<div class="empty">🎯 لسه مفيش ميزانية — افتح «حدود الأقسام» تحت ودوس على أي قسم</div>';
 }
 
 /* ---------- log ---------- */
@@ -507,7 +507,7 @@ $('#updNow').onclick=doUpdate; $('#updLater').onclick=()=>$('#updCard').style.di
 /* ---------- events ---------- */
 function renderAll(){ renderHero(); if($('#cAna').classList.contains('open')) renderAna(); renderBudget(); if($('#cLog').classList.contains('open')) renderLog(); }
 $('#addOut').onclick=()=>openAdd('out'); $('#addIn').onclick=()=>openAdd('in');
-$$('.tile').forEach(t=>t.onclick=()=>{ const c=$('#'+t.dataset.c); if(c.classList.contains('open')) closeCurtain(t.dataset.c); else { openCurtain(t.dataset.c); renderAll(); setTimeout(()=>window.scrollTo({top:c.offsetTop-70,behavior:'smooth'}),30); } });
+$$('.tile').forEach(t=>t.onclick=()=>{ const c=$('#'+t.dataset.c); if(c.classList.contains('open')) closeCurtain(t.dataset.c); else { openCurtain(t.dataset.c); if(t.dataset.c==='cBud' && !Object.values(S.budget).some(v=>+v>0)) $('#bLimits').open=true; renderAll(); setTimeout(()=>window.scrollTo({top:c.offsetTop-70,behavior:'smooth'}),30); } });
 document.addEventListener('click',e=>{ const x=e.target.closest('[data-close]'); if(x) closeCurtain(x.closest('.curtain').id); });
 $('#typeSeg').onclick=e=>{ const b=e.target.closest('button'); if(!b)return; if(F.type!==b.dataset.t){ F.type=b.dataset.t; F.cat=null; } renderForm(); };
 $('#keypad').onclick=e=>{ const b=e.target.closest('button'); if(b) key(b.dataset.k); };
