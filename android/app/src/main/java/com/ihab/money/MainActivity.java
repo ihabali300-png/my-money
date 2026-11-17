@@ -12,7 +12,7 @@ import android.webkit.WebViewClient;
 
 /** Full-screen WebView around «فلوسي» (served from GitHub Pages, so it updates by itself). */
 public class MainActivity extends Activity {
-    private static final String HOME = "https://ihabali300-png.github.io/REPO_NAME/";
+    private static final String HOME = "https://ihabali300-png.github.io/my-money/";
     private WebView web;
 
     @Override protected void onCreate(Bundle saved) {
